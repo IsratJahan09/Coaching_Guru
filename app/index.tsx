@@ -1,6 +1,10 @@
-import { View, Text, Image, StyleSheet, } from "react-native";
+import { View, Text, Image, StyleSheet, TouchableOpacity, } from "react-native";
 import  Colors  from './../constant/Colors';
+import { useRouter } from "expo-router";
 export default function Index() {
+
+  const router = useRouter();
+
   return (
     <View
       style={{
@@ -24,31 +28,38 @@ export default function Index() {
         borderTopRightRadius: 35,
       }}>
         <Text style={{
-          fontSize: 24,
-          fontWeight: 'bold',
+          fontSize: 30,
+          // fontWeight: 'bold',
           textAlign: 'center',
           color: Colors.WHITE,
+          fontFamily: 'outfit-bold',
+
         }}
         >Welcome to Coaching Guru</Text>
 
         <Text style={{
           fontSize: 20,
-          textAlign: 'center',
-          color: Colors.WHITE,
           marginTop: 20,
+          textAlign: 'center',
+          fontFamily: 'outfit',
+          color: Colors.WHITE,
         }}
-        >Transform your ideas into engaging educational content effortlessly with AI📕🤖</Text>
+        >Transform your ideas into engaging educational content effortlessly with AI!📕🤖</Text>
 
-        <View style={styles.button}>
+        <TouchableOpacity style={styles.button}
+         onPress={() => router.push('./auth/signUp')}
+        >
           <Text style={[styles.buttonText, {color: Colors.PRIMARY}]}>Get Started</Text>
-        </View>
-        <View style={[styles.button,
+        </TouchableOpacity>
+
+
+        <TouchableOpacity onPress={()=>router.push('./auth/signIn')} style={[styles.button,
            {backgroundColor: Colors.PRIMARY,
             borderWidth: 1,
             borderColor: Colors.WHITE,
            }]}>
           <Text style={[styles.buttonText, {color:Colors.WHITE}]}>Already have an Account?</Text>
-        </View>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -65,6 +76,7 @@ const styles = StyleSheet.create({
    buttonText: {
     textAlign: 'center',
     fontSize: 18,
+    fontFamily: 'outfit',
    
    }
 })
