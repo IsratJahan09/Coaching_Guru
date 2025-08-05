@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { useContext, useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, StyleSheet, Text, TextInput, ToastAndroid, TouchableOpacity, View, } from 'react-native';
 import { auth, db } from './../../config/firebaseConfig';
 import Colors from './../../constant/Colors';
@@ -10,7 +10,7 @@ export default function SignIn() {
     const router = useRouter();
     const [email, setEmail]=useState();
     const [password, setPassword]=useState();
-    const [userDetail, setUserDetail]=useContext(UserDetailContext);
+    const {userDetail, setUserDetail}=useContext(UserDetailContext);
     const [loading, setLoading] = useState(false);
 
     const onSignInClick = () => {
