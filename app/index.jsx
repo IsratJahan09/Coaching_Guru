@@ -1,11 +1,11 @@
-import { View, Text, Image, StyleSheet, TouchableOpacity, } from "react-native";
-import  Colors  from './../constant/Colors';
-import { useRouter } from "expo-router";
-import { auth, db } from './../config/firebaseConfig';
-import { onAuthStateChanged } from "firebase/auth";
 import { UserDetailContext } from "@/context/UserDetailContext";
-import { useContext } from "react";
+import { useRouter } from "expo-router";
+import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from 'firebase/firestore';
+import { useContext } from "react";
+import { Image, StyleSheet, Text, TouchableOpacity, View, } from "react-native";
+import { auth, db } from '../config/firebaseConfig';
+import Colors from '../constant/Colors';
 export default function Index() {
 
   const router = useRouter();
