@@ -115,6 +115,8 @@ const styles = StyleSheet.create({
 
     },
     frontCard: {
+        backgroundColor: Colors.WHITE,
+        flex: 1,
        display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
@@ -123,12 +125,13 @@ const styles = StyleSheet.create({
         
     },
     blackCard:{
+        flex: 1,
         display: 'flex',
+        backgroundColor: Colors.PRIMARY,
         justifyContent: 'center',
         alignItems: 'center',
         height: '100%', 
-       borderRadius: 20,
-        backgroundColor: Colors.PRIMARY,
+       borderRadius: 20
 
     }
 })
