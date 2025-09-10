@@ -2,12 +2,12 @@ import {View, Text, TextInput, StyleSheet, Pressable,} from 'react-native';
 import React, {useState, useContext}  from 'react';
 import Colors from './../../constant/Colors';
 import Button from '../../components/Shared/Button';
-import {GenerateTopicsAIModel} from '../../config/AiModel';
-import {GenerateCourseAIModel} from '../../config/AiModel';
+import { GenerateTopicsAIModel } from '../../config/AiModel';
+import { GenerateCourseAIModel } from '../../config/AiModel';
 import Prompt from '../../constant/Prompt';
-import {setDoc, doc} from 'firebase/firestore';
-import {db} from '../../config/firebaseConfig';
-import {UserDetailContext} from '../../context/UserDetailContext';
+import {setDoc, doc, serverTimestamp} from 'firebase/firestore';
+import {db} from './../../config/firebaseConfig';
+import {UserDetailContext} from './../../context/UserDetailContext';
 import {useRouter} from 'expo-router';
 import { ScrollView } from 'react-native-web';
 export default function AddCourse() {
@@ -16,12 +16,18 @@ export default function AddCourse() {
     const [userInput, setUserInput] = useState('');
     const [topics, setTopics] = useState([]); // This is correct
     const [selectedTopics, setSelectedTopics] = useState([]); // This is correct  
+    const [error, setError] = useState('');
     const router = useRouter();
     const onGenerateTopic = async () => {
         //  if (!userInput.trim()) return;
+        console.log(userDetail);
+        // if(userDetail?.member == false){
+        //   router.push('/subscriptionWall')
+        //   return;
+        // }
         setLoading(true);
         const PROMPT = userInput+Prompt.IDEA;
-        const aiResp = await  GenerateTopicsAIModel.sendMessage(PROMPT)
+        const aiResp = await GenerateTopicsAIModel.sendMessage(PROMPT)
         const topicIdea = JSON.parse(aiResp.response.text());
         console.log(topicIdea);
         //get topic idea from AI
@@ -55,23 +61,66 @@ export default function AddCourse() {
         const courses = resp.courses;
         console.log(courses);
 
-        courses?.forEach(async(course) => {
-          await setDoc(doc(db, 'Courses', Date.now().toString()), {
+        // Use Promise.all to wait for all courses to be saved
+        await Promise.all(courses?.map(async(course, index) => {
+          const docId = Date.now().toString() + '_' + index; // Prevent duplicate IDs
+          await setDoc(doc(db, 'Courses', docId), {
             ...course,
-            createdOn:new Date(),
-            createdBy:userDetail?.email,
-
-          // save course to database
-        })
-      })
-      router.push('/(tabs)/home');
-          setLoading(false);
+            createdOn: new Date(),
+            createdBy: userDetail?.email ?? '',
+            docId: docId,
+            completedChapter: [], // Initialize as empty array
+          })
+        }))
+        
+        router.push('/(tabs)/home');
+        setLoading(false);
     } catch (e) {
       console.log(e);
         setLoading(false);
     }
 
 }
+
+// const onGenerateCourse = async () => {
+//   setLoading(true);
+//   try {
+//     const PROMPT = selectedTopics.join(', ') + Prompt.COURSE;
+//     const aiResp = await GenerateCourseAIModel.sendMessage(PROMPT);
+    
+//     // Add response validation
+//     if (!aiResp?.response?.text()) {
+//       throw new Error('Empty response from AI');
+//     }
+    
+//     const resp = JSON.parse(aiResp.response.text());
+//     const courses = resp.courses;
+
+//     if (!courses || !Array.isArray(courses)) {
+//       throw new Error('Invalid course data format');
+//     }
+
+//     // Create all courses in parallel
+//     await Promise.all(courses.map(async (course) => {
+//       const courseRef = doc(db, 'Courses'); // Auto-generate ID
+//       await setDoc(courseRef, {
+//         ...course,
+//         createdOn: serverTimestamp(), // Server-side timestamp
+//         createdBy: userDetail?.email || 'anonymous',
+//         selectedTopics: selectedTopics,
+//         originalIdea: userInput
+//       });
+//       console.log('Course created with ID:', courseRef.id);
+//     }));
+
+//     router.push('/(tabs)/home');
+//   } catch (e) {
+//     console.error('Course creation error:', e);
+//     setError('Failed to create courses: ' + e.message);
+//   } finally {
+//     setLoading(false);
+//   }
+// }
 
   return (
        <ScrollView style={{

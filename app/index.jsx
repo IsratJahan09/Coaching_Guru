@@ -2,23 +2,45 @@ import { UserDetailContext } from "@/context/UserDetailContext";
 import { useRouter } from "expo-router";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from 'firebase/firestore';
-import { useContext } from "react";
-import { Image, StyleSheet, Text, TouchableOpacity, View, } from "react-native";
+import { useContext, useEffect, useState } from "react";
+import { ActivityIndicator, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { auth, db } from '../config/firebaseConfig';
 import Colors from '../constant/Colors';
+
 export default function Index() {
-
   const router = useRouter();
-  const { userDetail, setUserDetail } = useContext(UserDetailContext);
+  const { setUserDetail } = useContext(UserDetailContext);
+  const [isLoading, setIsLoading] = useState(true);
 
-  onAuthStateChanged(auth, async(user) => {
-    if (user) {
-      console.log(user);
-      const result = await getDoc(doc(db, 'users', user?.email));
-      setUserDetail(result.data());
-        router.replace('/(tabs)/home');
-    } 
-  }); 
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async(user) => {
+      if (user) {
+        console.log(user);
+        try {
+          const result = await getDoc(doc(db, 'users', user?.email));
+          if (result.exists()) {
+            setUserDetail(result.data());
+            router.replace('/(tabs)/home');
+          }
+        } catch (error) {
+          console.log('Error fetching user data:', error);
+        }
+      }
+      setIsLoading(false);
+    });
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
+  }, [router, setUserDetail]); 
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.WHITE }}>
+        <ActivityIndicator size="large" color={Colors.PRIMARY} />
+        <Text style={{ marginTop: 10, fontFamily: 'outfit' }}>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <View

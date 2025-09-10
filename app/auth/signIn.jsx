@@ -1,34 +1,48 @@
 import { useRouter } from 'expo-router';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import React, { useContext, useState } from 'react';
-import { ActivityIndicator, Image, Pressable, StyleSheet, Text, TextInput, ToastAndroid, TouchableOpacity, View, } from 'react-native';
+import { useContext, useState } from 'react';
+import { ActivityIndicator, Alert, Image, Platform, Pressable, StyleSheet, Text, TextInput, ToastAndroid, TouchableOpacity, View, } from 'react-native';
 import { auth, db } from './../../config/firebaseConfig';
 import Colors from './../../constant/Colors';
 import { UserDetailContext } from './../../context/UserDetailContext';
+
 export default function SignIn() {
     const router = useRouter();
     const [email, setEmail]=useState();
     const [password, setPassword]=useState();
-    const {userDetail, setUserDetail}=useContext(UserDetailContext);
+    const {setUserDetail}=useContext(UserDetailContext);
     const [loading, setLoading] = useState(false);
 
+    const showMessage = (message) => {
+        if (Platform.OS === 'android') {
+            ToastAndroid.show(message, ToastAndroid.BOTTOM);
+        } else {
+            Alert.alert('Error', message);
+        }
+    };
+
     const onSignInClick = () => {
+      if (!email || !password) {
+        showMessage('Please fill in all fields');
+        return;
+      }
+      
       setLoading(true);
-    signInWithEmailAndPassword(auth, email, password)
-      .then(async(resp) => {
-        // Signed in 
-        const user = resp.user;
-        console.log(user);
-        await getUserDetail();
-        setLoading(false);
-        router.replace('/(tabs)/home');
-      }).catch(e=> {
-        // error
-        console.log(e);
-        setLoading(false);
-        ToastAndroid.show('Incorrect Email or Password', ToastAndroid.BOTTOM);
-    })
+      signInWithEmailAndPassword(auth, email, password)
+        .then(async(resp) => {
+          // Signed in 
+          const user = resp.user;
+          console.log(user);
+          await getUserDetail();
+          setLoading(false);
+          router.replace('/(tabs)/home');
+        }).catch(e=> {
+          // error
+          console.log(e);
+          setLoading(false);
+          showMessage('Wrong password, try again');
+      })
     }
 
     const getUserDetail = async() => {
@@ -50,6 +64,7 @@ export default function SignIn() {
     }}>
       <Image source={require('./../../assets/images/logo.png')}
         style={{
+          marginTop: 100,
             width: 180,
             height: 180,
         }}

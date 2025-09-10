@@ -1,7 +1,6 @@
-import {View, Text, Image} from 'react-native';
-import React from 'react';
-import Button from '../Shared/Button';
 import { useRouter } from 'expo-router';
+import { Image, Text, View } from 'react-native';
+import Button from '../Shared/Button';
 
 export default function NoCourse() {
     const router = useRouter();
@@ -24,7 +23,7 @@ export default function NoCourse() {
                  textAlign: 'center' }}
              >You Don&apos;t Have Any Courses Yet</Text>
              <Button text={'+ Create New Course'} onPress={() => router.push('/addCourse')}/>
-             <Button text={'Explore Existing Courses'} 
+             <Button text={'Explore Existing Courses'} onPress={() => router.push('/exploreCourses')} 
              type="outline"/>
        </View>
     )

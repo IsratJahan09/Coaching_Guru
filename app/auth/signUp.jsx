@@ -1,29 +1,54 @@
-import { View, Text, Image, TextInput, StyleSheet, TouchableOpacity, Pressable, } from 'react-native'
-import React, {useContext} from 'react'
-import Colors from './../../constant/Colors';
 import { useRouter } from 'expo-router';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
+import React from 'react';
+import { ActivityIndicator, Alert, Image, Platform, Pressable, StyleSheet, Text, TextInput, ToastAndroid, TouchableOpacity, View } from 'react-native';
 import { auth, db } from '../../config/firebaseConfig';
-import { setDoc, doc } from 'firebase/firestore';
-import { UserDetailContext } from './../../context/UserDetailContext';
+import Colors from './../../constant/Colors';
+
 export default function SignUp() {
     const router = useRouter();
     const [fullName, setFullName] = React.useState('');
     const [email, setEmail] = React.useState('');
     const [password, setPassword] = React.useState('');
-    const {userDetail, setUserDetail} = useContext(UserDetailContext);
+    const [loading, setLoading] = React.useState(false);
+
+    const showMessage = (message) => {
+        if (Platform.OS === 'android') {
+            ToastAndroid.show(message, ToastAndroid.BOTTOM);
+        } else {
+            Alert.alert('Message', message);
+        }
+    };
 
     const CreateNewAccount = () =>{
+      if (!fullName || !email || !password) {
+        showMessage('Please fill in all fields');
+        return;
+      }
+
+      if (password.length < 6) {
+        showMessage('Password must be at least 6 characters');
+        return;
+      }
+
+      setLoading(true);
       createUserWithEmailAndPassword(auth, email, password)
       .then(async(resp)=> {
         // Signed in 
         const user = resp.user;
         console.log(user);
         await SaveUser(user);
+        setLoading(false);
+        showMessage('Account created successfully! Please sign in.');
+        // Redirect to sign in page after successful account creation
+        router.replace('/auth/signIn');
       }
       ).catch(e=> {
         // error
         console.log(e.message);
+        setLoading(false);
+        showMessage(e.message);
       })
     }
 
@@ -35,8 +60,8 @@ export default function SignUp() {
           uid: user?.uid,
         }
         await setDoc(doc(db, 'users', email), data);
-        setUserDetail(data);
-
+        // Remove setUserDetail here since we're redirecting to sign in
+        // setUserDetail(data);
 
         // Save user data to your database
       }
@@ -49,10 +74,10 @@ export default function SignUp() {
         flex: 1,
         padding:25,
         backgroundColor: Colors.WHITE,
-
     }}>
       <Image source={require('./../../assets/images/logo.png')}
         style={{
+          marginTop: 100,
             width: 180,
             height: 180,
         }}
@@ -69,22 +94,26 @@ export default function SignUp() {
 
        <TouchableOpacity
         onPress={CreateNewAccount}
+        disabled={loading}
        style={{
         padding: 15,
         backgroundColor: Colors.PRIMARY,
         width: '100%',
         marginTop: 25,
         borderRadius: 10,
+        opacity: loading ? 0.7 : 1,
        }}
        >
         
-        <Text style
+       { !loading ? <Text style
         ={{
             textAlign: 'center',
             fontSize: 20,
             color: Colors.WHITE,
             fontFamily: 'outfit',
-        }}>Create Account</Text>
+        }}>Create Account</Text> :
+        <ActivityIndicator size={'large'} color={Colors.WHITE}/>
+      }
        </TouchableOpacity>
 
       <View style={{
