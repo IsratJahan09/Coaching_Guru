@@ -1,0 +1,141 @@
+import { useRouter } from 'expo-router';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { useContext, useState } from 'react';
+import { ActivityIndicator, Alert, Image, Platform, Pressable, StyleSheet, Text, TextInput, ToastAndroid, TouchableOpacity, View, } from 'react-native';
+import { auth, db } from './../../config/firebaseConfig';
+import Colors from './../../constant/Colors';
+import { UserDetailContext } from './../../context/UserDetailContext';
+
+export default function SignIn() {
+    const router = useRouter();
+    const [email, setEmail]=useState();
+    const [password, setPassword]=useState();
+    const {setUserDetail}=useContext(UserDetailContext);
+    const [loading, setLoading] = useState(false);
+
+    const showMessage = (message) => {
+        if (Platform.OS === 'android') {
+            ToastAndroid.show(message, ToastAndroid.BOTTOM);
+        } else {
+            Alert.alert('Error', message);
+        }
+    };
+
+    const onSignInClick = () => {
+      if (!email || !password) {
+        showMessage('Please fill in all fields');
+        return;
+      }
+      
+      setLoading(true);
+      signInWithEmailAndPassword(auth, email, password)
+        .then(async(resp) => {
+          // Signed in 
+          const user = resp.user;
+          console.log(user);
+          await getUserDetail();
+          setLoading(false);
+          router.replace('/(tabs)/home');
+        }).catch(e=> {
+          // error
+          console.log(e);
+          setLoading(false);
+          showMessage('Wrong password, try again');
+      })
+    }
+
+    const getUserDetail = async() => {
+       const result = await getDoc(doc(db, 'users', email));
+       console.log(result.data());
+       setUserDetail(result.data());
+    }
+
+
+  return (
+    <View style={{
+        display: 'flex',
+        alignItems: 'center',
+        paddingTop: 100,
+        flex: 1,
+        padding:25,
+        backgroundColor: Colors.WHITE,
+
+    }}>
+      <Image source={require('./../../assets/images/logo.png')}
+        style={{
+          marginTop: 100,
+            width: 180,
+            height: 180,
+        }}
+      />
+      <Text style={{
+        fontSize: 30,
+        fontFamily: 'outfit-bold',
+     
+      }}>Welcome Back</Text>
+
+      <TextInput placeholder='Email'
+      onChangeText={(value)=>setEmail(value)}
+      style={styles.textInput}/>
+      <TextInput placeholder='Password' 
+      onChangeText={(value)=>setPassword(value)}
+      secureTextEntry={true}
+       style={styles.textInput}/>
+
+       <TouchableOpacity
+       onPress={onSignInClick}
+       disabled={loading}
+       style={{
+        padding: 15,
+        backgroundColor: Colors.PRIMARY,
+        width: '100%',
+        marginTop: 25,
+        borderRadius: 10,
+       }}
+       >
+        
+       { !loading? <Text style
+        ={{
+            textAlign: 'center',
+            fontSize: 20,
+            color: Colors.WHITE,
+            fontFamily: 'outfit',
+        }}>Sign In</Text>:
+        <ActivityIndicator size={'large'} color={Colors.WHITE}/>
+      }
+       </TouchableOpacity>
+      
+
+      <View style={{
+        display: 'flex',
+        flexDirection: 'row',gap: 5,
+        marginTop: 20,
+      }}>
+      <Text style={{
+        fontFamily: 'outfit',
+      }}>Dont have an account?</Text>
+       <Pressable 
+       onPress={() => {router.push('/auth/signUp')}}
+       >
+                <Text style={{
+            color: Colors.PRIMARY,
+            fontFamily: 'outfit-bold',
+                }}>Create New Here</Text>
+        </Pressable>
+      </View>
+
+    </View>
+  )
+}
+
+const styles = StyleSheet.create({ 
+    textInput:{
+        borderWidth: 1,
+        width: '100%',
+        padding: 15,
+        fontSize: 18,
+        marginTop: 20,
+        borderRadius: 8,
+    }
+})
